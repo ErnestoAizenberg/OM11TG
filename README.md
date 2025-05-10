@@ -1,2 +1,2 @@
-# OM11TG
-Open Manus 11 - Telegram web service
+# open-manus-agent
+An Open Manus Agent with Telegram integration 
