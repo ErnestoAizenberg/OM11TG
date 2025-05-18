@@ -123,12 +123,11 @@ class TelegramManager:
                 "error": f"Внутренняя ошибка сервера: {str(e)}",
             }, 500
 
-
     def check_webhook(self, token):
         self.logger.debug("Checking webhook for token: %s", token)
         response = requests.get(f"https://api.telegram.org/bot{token}/getWebhookInfo")
         self.logger.debug("getWebhookInfo response status: %s", response.status_code)
-        
+
         if response.ok:
             data = response.json()
             self.logger.debug("Webhook info retrieved: %s", data)
@@ -136,38 +135,43 @@ class TelegramManager:
                 self.logger.info("Webhook is already set for token: %s", token)
                 return True
             else:
-               self.logger.info("No webhook set for token: %s", token)
+                self.logger.info("No webhook set for token: %s", token)
         else:
-            self.logger.error("Failed to get webhook info for token %s, status code: %s", token, response.status_code)
-        
-        return False
+            self.logger.error(
+                "Failed to get webhook info for token %s, status code: %s",
+                token,
+                response.status_code,
+            )
 
+        return False
 
     def set_webhook(self, token):
         url = f"{self.server_address}/webhook/{token}"
         self.logger.info("Setting webhook for token: %s with URL: %s", token, url)
-        
+
         response = requests.get(f"{BOT_API_URL}{token}/setWebhook?url={url}")
         self.logger.info("setWebhook response status: %s", response.status_code)
-        
+
         if response.ok:
             self.logger.info("Webhook successfully set for token: %s", token)
         else:
-            self.logger.error("Failed to set webhook for token: %s, status code: %s", token, response.status_code)
-            
+            self.logger.error(
+                "Failed to set webhook for token: %s, status code: %s",
+                token,
+                response.status_code,
+            )
+
         return response.ok
 
     def set_webhooks(self):
         bot_tokens = self.config_manager.get_bot_tokens()
         self.logger.info("Setting webhooks for tokens...")
-        
-        for token in bot_tokens:
-           if self.check_webhook(token):
-               if self.set_webhook(token):
-                   self.logger.info("Webhook установлен для токена: %s", token)
-               else:
-                   self.logger.error("Ошибка установки вебхука для токена: %s", token)
-           else:
-               self.logger.warning("Token is invalid or already registered: %s", token)
 
-                                 
+        for token in bot_tokens:
+            if self.check_webhook(token):
+                if self.set_webhook(token):
+                    self.logger.info("Webhook установлен для токена: %s", token)
+                else:
+                    self.logger.error("Ошибка установки вебхука для токена: %s", token)
+            else:
+                self.logger.warning("Token is invalid or already registered: %s", token)

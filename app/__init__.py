@@ -3,12 +3,12 @@ from flask import Flask
 from app.api import configure_api
 from app.config_manager import UserConfigManager
 from app.extensions import init_redis
-from app.utils import generate_uuid_32 
+from app.utils import generate_uuid_32
 from app.logs import logger
 from app.messages import MessageBuilder, MessageTemplates
 from app.session_manager import TelegramSessionManager
 from app.updates import CommandHandler
-from config import RedisConfig
+from config import RedisConfig, Config, APIURLConfig
 
 from app.manus_api import ManusAgent
 
@@ -17,16 +17,16 @@ from app.manager import TelegramManager
 __all__ = ["create_app"]
 TG_CONFIGS_DIR = "instance/user_configs"
 BOT_API_URL = "https://api.telegram.org/bot"
-MANUS_AGENT_ADDRES = "http://localhost:5001/api"
 
 
-def create_app(app_config, redis_config: RedisConfig):
+def create_app(
+    app_config: Config, api_url_config: APIURLConfig, redis_config: RedisConfig
+):
     app = Flask(__name__)
     app.state_config = app_config
-    
 
     manus_agent = ManusAgent(
-        agent_url=MANUS_AGENT_ADDRES,
+        agent_url=api_url_config.get("OM11"),
         logger=logger,
     )
     redis_client = init_redis(redis_config)

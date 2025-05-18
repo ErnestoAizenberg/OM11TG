@@ -5,6 +5,7 @@ from typing import Callable
 
 configs = {}
 
+
 def configure_api(
     app,
     logger: logging.Logger,
@@ -30,7 +31,7 @@ def configure_api(
 
                 return jsonify({"status": "ok"}), 200
             else:
-                raise ValueError("Unformated request")
+                raise ValueError("Unformatted request")
         except Exception as e:
             logger.exception("Unexpected error occurred while handling update: %s", e)
             return jsonify({"status": "error"}), 500
@@ -44,29 +45,62 @@ def configure_api(
         user_id = data.get("user_id", "default")
         bot_token = data.get("bot_token")
         chat_id = data.get("chat_id")
-        
+
         try:
             # Test connection
             success = telegram_manager.test_connection(bot_token, chat_id)
             if not success:
-                return jsonify({"success": False, "error": "Failed to connect to Telegram API"}), 400
+                return (
+                    jsonify(
+                        {"success": False, "error": "Failed to connect to Telegram API"}
+                    ),
+                    400,
+                )
 
             # Save config
-            config = {
-                "bot_token": bot_token,
-                "chat_id": chat_id,
-                "user_id": user_id
-            }
+            config = {"bot_token": bot_token, "chat_id": chat_id, "user_id": user_id}
             configs[user_id] = config
 
             # Set webhook
             set_webhook_success = telegram_manager.set_webhook(bot_token)
             if not set_webhook_success:
-                return jsonify({"success": False, "error": "Failed to set webhook"}), 500
+                return (
+                    jsonify({"success": False, "error": "Failed to set webhook"}),
+                    500,
+                )
 
             return jsonify({"success": True, "message": "Webhook set successfully"})
         except Exception as e:
             app.logger.exception("Error in setup_webhook")
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    @app.route("/api/telegram/send_message", methods=["POST"])
+    def send_message():
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No JSON data provided"}), 400
+
+        user_id = data.get("user_id")
+        message_text = data.get("message_text")
+
+        if not user_id or not message_text:
+            return jsonify({"success": False, "error": "Invalid data received"}), 400
+
+        try:
+            status = telegram_manager.send_message(
+                user_id=user_id,
+                message_text=message_text,
+                parse_mode=None,
+            )
+            if not status:
+                return (
+                    jsonify({"success": False, "error": "Failed to send message"}),
+                    500,
+                )
+
+            return jsonify({"success": True, "message": "Message sent"})
+        except Exception as e:
+            app.logger.exception("Error in send_message")
             return jsonify({"success": False, "error": str(e)}), 500
 
     @app.route("/api/telegram/disconnect", methods=["POST"])
@@ -93,4 +127,3 @@ def configure_api(
                 "user_id": user_id,
             }
         )
-
