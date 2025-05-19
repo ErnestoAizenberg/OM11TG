@@ -120,7 +120,7 @@ class TelegramManager:
             )
             return {
                 "success": False,
-                "error": f"Внутренняя ошибка сервера: {str(e)}",
+                "error": "Внутренняя ошибка сервера",
             }, 500
 
     def check_webhook(self, token):

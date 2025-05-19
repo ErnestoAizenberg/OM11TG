@@ -1,7 +1,7 @@
 import logging
 from flask import jsonify, request
 from app.manager import TelegramManager
-from typing import Callable
+from typing import Callable, Tuple, Dict
 
 configs = {}
 
@@ -36,7 +36,7 @@ def configure_api(
             logger.exception("Unexpected error occurred while handling update: %s", e)
             return jsonify({"status": "error"}), 500
 
-    @app.route("/api/telegram/setup_webhook", methods=["POST"])
+    @app.route("/api/telegram/set_webhook", methods=["POST"])
     def setup_webhook():
         data = request.get_json()
         if not data:
@@ -87,14 +87,19 @@ def configure_api(
             return jsonify({"success": False, "error": "Invalid data received"}), 400
 
         try:
-            status = telegram_manager.send_message(
+            resp: Tuple = telegram_manager.send_message(
                 user_id=user_id,
                 message_text=message_text,
                 parse_mode=None,
             )
-            if not status:
+            status: Dict = resp[0]
+            status_code: int = resp[1]
+
+            if not status.get("succcess"):
+                error_message = status.get("error", "Unknown Error")
+                reponse_message = f"Failed to send message: {error_message}"
                 return (
-                    jsonify({"success": False, "error": "Failed to send message"}),
+                    jsonify({"success": False, "error": reponse_message}),
                     500,
                 )
 
