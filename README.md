@@ -1,3 +1,5 @@
+![Python](https://img.shields.io/badge/Python-3.7-9c1aff) ![Flask](https://img.shields.io/badge/Flask-2.2.5-0ff0fc) ![Flask-SQLAlchemy](https://img.shields.io/badge/Flask--SQLAlchemy-3.1.1-00ff9d) ![redis](https://img.shields.io/badge/redis-latest-ff4d4d)
+
 # OM11TG
 
 Telegram integration for Open Manus Agent  
