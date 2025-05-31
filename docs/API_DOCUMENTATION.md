@@ -169,10 +169,3 @@ GET /api/telegram/status?user_id=user123
 4. **Disconnect** → `POST /api/telegram/disconnect`  
 
 ---
-
-## **Interactive Documentation**  
-For real-time testing, use:  
-- **Postman Collection** (import via OpenAPI/Swagger)  
-- **FastAPI Auto-Docs** (if integrated) at `/docs`  
-
----
