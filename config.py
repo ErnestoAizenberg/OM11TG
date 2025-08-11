@@ -1,88 +1,93 @@
-# config.py
-
 import os
-import argparse
 from dotenv import load_dotenv
+from typing import Any, Optional, TypeVar
 
-# Load environment variables from the specified .env file
+# Load environment variables
 load_dotenv("instance/.env")
 
+T = TypeVar('T')
 
-def parse_arguments():
-    """
-    Parse command-line arguments for configuration overrides.
-    """
-    parser = argparse.ArgumentParser(description="Flask app with Redis support.")
-
-    parser.add_argument("--server_address", type=str, help="URL of the server.")
-    parser.add_argument("--secret_key", type=str, help="Secret key for Flask app.")
-    parser.add_argument("--redis_host", type=str, help="Redis server host.")
-    parser.add_argument("--redis_port", type=int, help="Redis server port.")
-    parser.add_argument("--redis_db", type=int, help="Redis database number.")
-    parser.add_argument("--host", type=str, help="Server host.")
-    parser.add_argument("--port", type=int, help="Server port.")
-
-    return parser.parse_args()
-
-
-# Parse command-line arguments
-args = parse_arguments()
-
-
-def get_input(prompt, default=None):
-    """
-    Prompt the user for input, with an optional default.
-    """
-    user_input = input(f"{prompt} (default: {default}): ")
-    return user_input if user_input else default
+def get_env(key: str, required: bool = True, default: Optional[T] = None) -> Optional[T]:
+    """Safely get environment variable with optional requirement check."""
+    value = os.getenv(key)
+    if required and value is None and default is None:
+        raise ValueError(f"Required environment variable {key} is not set")
+    return value if value is not None else default
 
 
 class APIURLConfig:
-    """
-    Class holding API URL configurations.
-    """
+    """API URL configurations loaded from environment."""
 
-    OM11: str = "https://e522-35-196-192-57.ngrok-free.app"
-    OM11TG: str = "http://localhost:5001"
+    OM11: str = get_env("API_OM11_URL")
+    OM11TG: str = get_env("API_OM11TG_URL")
 
-    def get(self, key, default=None):
-        return getattr(self, key, default)
-
-
-class DefConfig:
-    """
-    Placeholder for default configurations.
-    """
-
-    pass
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
+        """Get configuration value by key with optional default."""
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            if default is not None:
+                return default
+            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{key}'")
 
 
 class Config:
-    """
-    Basic Flask configuration class.
-    """
+    """Flask application configuration."""
 
-    SECRET_KEY = args.secret_key or get_input("Enter secret key", "llmlllmlllmlm")
-    DEBUG = os.getenv("FLASK_DEBUG", "true").lower() in ["true", "1", "t"]
-    SERVER_ADDRESS = args.server_address or get_input(
-        "Server address", "https://example.com"
-    )
-    HOST = args.host or get_input("Host", "localhost")
-    PORT = args.port or int(get_input("Port", "5001"))
+    SECRET_KEY: str = get_env("SECRET_KEY")
+    DEBUG: bool = os.getenv("FLASK_DEBUG", "false").lower() in ("true", "1", "t")
+    ENV: str = get_env("FLASK_ENV", "production")
 
-    def get(self, key, default=None):
-        return getattr(self, key, default)
+    # Server config
+    HOST: str = get_env("SERVER_HOST")
+    PORT: int = int(get_env("SERVER_PORT"))
+    SERVER_ADDRESS: str = get_env("SERVER_ADDRESS")
+
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
+        """Get configuration value by key with optional default.
+
+        Args:
+            key: Configuration key to retrieve
+            default: Default value if key doesn't exist
+
+        Returns:
+            The configuration value or default if provided
+
+        Raises:
+            AttributeError: If key doesn't exist and no default provided
+        """
+        try:
+            return getattr(self, key)
+        except AttributeError as e:
+            if default is not None:
+                return default
+            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{key}'") from e
 
 
 class RedisConfig:
-    """
-    Redis configuration settings.
-    """
+    """Redis configuration."""
 
-    HOST = args.redis_host or get_input("Redis host", "localhost")
-    PORT = args.redis_port or int(get_input("Redis port", "6379"))
-    DB = args.redis_db or int(get_input("Redis database number", "0"))
-    DECODE_RESPONSES = True
+    HOST: str = get_env("REDIS_HOST")
+    PORT: int = int(get_env("REDIS_PORT"))
+    DB: int = int(get_env("REDIS_DB"))
+    DECODE_RESPONSES: bool = True
 
-    def get(self, key, default=None):
-        return getattr(self, key, default)
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
+        """Get Redis configuration value by key.
+
+        Example:
+            >>> redis_config.get('HOST', 'localhost')
+            'redis-server'
+        """
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            if default is not None:
+                return default
+            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{key}'")
+
+
+# Configuration instances for easy import
+api_url_config = APIURLConfig()
+config = Config()
+redis_config = RedisConfig()
