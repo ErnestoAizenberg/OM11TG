@@ -1,12 +1,5 @@
-requests
-openai>=0.1.0
-pyppeteer>=0.0.1
-playwright
-python-dotenv>=0.1.0
-pyppeteer_stealth>=2.0.0
-websockets>=10.0
-python_anticaptcha>=0.1.0
-capmonstercloudclient>=0.1.0
-
-# Type stubs for dependencies
-types-requests
+Flask==2.2.5
+py_mini_racer==0.6.0
+python-dotenv==1.1.1
+redis==6.4.0
+Requests==2.32.4
