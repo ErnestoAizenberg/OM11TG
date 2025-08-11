@@ -12,7 +12,7 @@ def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(("127.0.0.1", port)) == 0
 
-def main():
+def old_main():
     # Initialize configuration objects
     app_config = Config()
     redis_config = RedisConfig()
@@ -65,5 +65,22 @@ def main():
         host=app_config.get("HOST", "localhost")
     )
 
+def new_main():
+    app_config = Config()
+    redis_config = RedisConfig()
+    api_url_config = APIURLConfig()
+
+    app = create_app(
+        app_config=app_config,
+        api_url_config=api_url_config,
+    )
+
+    app.run(
+        debug=app_config.get("DEBUG", False),
+        port=app_config.get("PORT", 5000),
+        host=app_config.get("HOST", "localhost")
+    )
+
 if __name__ == "__main__":
-    main()
+    #old_main()
+    new_main()

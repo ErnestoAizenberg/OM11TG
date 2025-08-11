@@ -6,7 +6,7 @@ from app.extensions import init_redis
 from app.utils import generate_uuid_32
 from app.logs import logger
 from app.messages import MessageBuilder, MessageTemplates
-from app.session_manager import TelegramSessionManager
+from app.sqlite_session_manager import SQLiteSessionManager
 from app.updates import CommandHandler
 from config import RedisConfig, Config, APIURLConfig
 
@@ -20,7 +20,9 @@ BOT_API_URL = "https://api.telegram.org/bot"
 
 
 def create_app(
-    app_config: Config, api_url_config: APIURLConfig, redis_config: RedisConfig
+    app_config: Config,
+    api_url_config: APIURLConfig,
+    #redis_config: RedisConfig
 ):
     app = Flask(__name__)
     app.state_config = app_config
@@ -29,11 +31,11 @@ def create_app(
         agent_url=api_url_config.get("OM11"),
         logger=logger,
     )
-    redis_client = init_redis(redis_config)
+    #redis_client = init_redis(redis_config)
     templates = MessageTemplates()
     message_builder = MessageBuilder(templates)
 
-    session_manager = TelegramSessionManager(redis_client)
+    session_manager = SQLiteSessionManager(db_file='sessions.db')
     config_manager = UserConfigManager(config_dir=TG_CONFIGS_DIR)
     telegram_manager = TelegramManager(
         logger=logger,
